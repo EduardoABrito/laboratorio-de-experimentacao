@@ -15,6 +15,7 @@ interface IProps {
   metricsCk: MetricsCkResponseDto;
   compositeScore: number;
   allReleasesCount: number
+
 }
 
 export class RepositoryEntity {
@@ -30,6 +31,7 @@ export class RepositoryEntity {
     this.compositeScore = props.compositeScore;
     this.maturity = this.calculateMaturity();
     this.allReleasesCount = props.allReleasesCount;
+
   }
 
   name: string;
@@ -43,6 +45,7 @@ export class RepositoryEntity {
   compositeScore: number;
   maturity: number;
   allReleasesCount: number;
+
 
   private calculateMaturity(): number {
     const currentDate = new Date();
