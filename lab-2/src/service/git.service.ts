@@ -95,30 +95,37 @@ export class GitService {
   async getRepositories(quantity: number): Promise<RepositoryEntity[]> {
     const listRepositories: RepositoryGitResponseDto[] = [];
     let cursorAux = null;
-    console.log(`Carregando repositorios`);
+    console.log(`Carregando repositórios`);
 
     while (listRepositories.length < quantity) {
       progressBarStep(listRepositories.length, quantity);
       const missingAmount = quantity - listRepositories.length;
 
-      const { repositories, cursor } =
-        await this.findRepositoriesInGithub(cursorAux);
+      try {
+        const { repositories, cursor } = await this.findRepositoriesInGithub(cursorAux);
 
-      cursorAux = cursor;
+        if (!repositories || repositories.length === 0) {
+          break;
+        }
 
-      if (!repositories || repositories?.length == 0) {
-        break;
+        const addRepositories = repositories.slice(0, missingAmount);
+        listRepositories.push(...addRepositories);
+        cursorAux = cursor;
+
+        if (!cursorAux) {
+          break;
+        }
+      } catch (error) {
+        console.error(`Erro : ${error.message}`);
+        console.error(error.stack);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-
-      const addRepositories = repositories.slice(0, missingAmount);
-
-      listRepositories.push(...addRepositories);
     }
 
     progressBarStep(listRepositories.length, quantity);
-
     return this.createEntites(listRepositories);
   }
+
 
   private async createEntites(
     listRepositories: RepositoryGitResponseDto[],
