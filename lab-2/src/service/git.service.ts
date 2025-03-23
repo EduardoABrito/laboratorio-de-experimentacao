@@ -137,7 +137,8 @@ export class GitService {
         createdAt: repository.createdAt,
         updatedAt: repository.updatedAt,
         url: repository.url,
-        compositeScore: repository.compositeScore
+        compositeScore: repository.compositeScore,
+        releases: repository.releases.totalCount
       });
 
       progressBarStep(entitiesCountCreate++, listRepositories.length);

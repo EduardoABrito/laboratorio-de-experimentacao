@@ -16,7 +16,7 @@ export class Requisito3 {
   private repositories: RepositoryEntity[];
 
   private calculateActivityScore(repository: RepositoryEntity, maximos : responseMaxDTO): number {
-      const { activityScore, metricsCk } = repository;
+      const { releases, metricsCk } = repository;
       const { cbo, dit, lcom } = metricsCk;
   
       
@@ -30,7 +30,7 @@ export class Requisito3 {
       const normalizedLcom = lcom !== null ? 1 - lcom / maximos.maxLcom : 1;
   
       return (
-        W_maturity * activityScore +
+        W_maturity * releases +
         W_cbo * normalizedCbo +
         W_dit * normalizedDit +
         W_lcom * normalizedLcom
