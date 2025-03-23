@@ -135,12 +135,12 @@ export class GitService {
   private async createEntites(
     listRepositories: RepositoryGitResponseDto[],
   ): Promise<RepositoryEntity[]> {
-    let entitiesCountCreate = 0;
+    const entities = [];
 
     console.log(`\nCarregando entidades`);
-    progressBarStep(entitiesCountCreate++, listRepositories.length);
+    progressBarStep(entities.length, listRepositories.length);
 
-    const promiseEntities = listRepositories.map(async (repository) => {
+    for (const repository of listRepositories) {
       const entity = await RepositoryEntity.create({
         name: repository.name,
         owner: repository.owner.login,
@@ -153,14 +153,11 @@ export class GitService {
         allReleasesCount: repository.releases.totalCount,
       });
 
-      progressBarStep(entitiesCountCreate++, listRepositories.length);
+      entities.push(entity);
+      progressBarStep(entities.length, listRepositories.length);
+    }
 
-      return entity;
-    });
-
-    const entities = await Promise.all(promiseEntities);
-
-    return entities.filter((entity) => entity !== null);
+    return entities;
   }
 
   async cloneRepository(url: string, name: string): Promise<string> {
