@@ -11,7 +11,7 @@ export class RepositoryGitResponseDto {
   closedIssues: { totalCount: number };
   releases: { totalCount: number };
   url: string;
-  compositeScore : number
+  compositeScore : number;
 }
 export class FindRepositoriesGitResponseDto {
   repositories: RepositoryGitResponseDto[];

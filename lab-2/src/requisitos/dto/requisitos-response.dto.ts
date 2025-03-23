@@ -8,7 +8,6 @@ class RequisitosBaseResponseDto extends MetricsCkResponseDto {
   updatedAt: Date;
   url: string;
   compositeScore: number;
-
 }
 
 export class Requisito1ResponseDto extends RequisitosBaseResponseDto {
@@ -20,7 +19,7 @@ export class Requisito2ResponseDto extends RequisitosBaseResponseDto {
 }
 
 export class Requisito3ResponseDto extends RequisitosBaseResponseDto {
-  popularity: number;
+  allReleasesCount: number;
 }
 
 export class Requisito4ResponseDto extends RequisitosBaseResponseDto {

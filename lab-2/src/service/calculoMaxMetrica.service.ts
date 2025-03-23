@@ -13,9 +13,6 @@ export class CalculoMaximas {
       lcom.push(repo.metricsCk?.lcom ?? 0);
     });
 
-    console.log("CBO: ", cbo);
-    console.log("Max CBO: ", Math.max(...cbo));
-
     return {
       maxCbo: Math.max(...cbo),
       maxDit: Math.max(...dit),

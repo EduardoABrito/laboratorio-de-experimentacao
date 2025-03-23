@@ -16,10 +16,11 @@ export class Requisito4 {
   private repositories: RepositoryEntity[];
 
   private calculateQualityScore(repository: RepositoryEntity, maximos : responseMaxDTO): number {
-        const { tamanhoScore, metricsCk } = repository;
-        const { cbo, dit, lcom } = metricsCk;
-    
-        const W_tamanho = 0.4;
+        const { metricsCk } = repository;
+        const { cbo, dit, lcom, loc} = metricsCk;
+        
+        if(loc == 0 || loc == null) return 0
+
         const W_cbo = 0.2;
         const W_dit = 0.2;
         const W_lcom = 0.2;
@@ -29,7 +30,6 @@ export class Requisito4 {
         const normalizedLcom = lcom !== null ? 1 - lcom / maximos.maxLcom : 1;
     
         return (
-          W_tamanho * tamanhoScore +
           W_cbo * normalizedCbo +
           W_dit * normalizedDit +
           W_lcom * normalizedLcom
@@ -66,16 +66,15 @@ export class Requisito4 {
     }
 
     const config = {
-      type: 'bar',
+      type: 'scatter',
       data: {
-        labels: this.results.map((r) => r.name),
         datasets: [
           {
-            label: 'Pontuação de Qualidade',
-            data: this.results.map((r) => r.compositeScore),
-            backgroundColor: 'rgba(255, 99, 132, 0.6)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1,
+            label: 'Loc vs Qualidade',
+            data: this.results.map((r) => ({
+              x: r.loc,
+              y: r.compositeScore,
+            })),
           },
         ],
       },
@@ -97,7 +96,7 @@ export class Requisito4 {
           y: {
             title: {
               display: true,
-              text: 'Pontuação de Qualidade',
+              text: 'Pontuação de Atividade',
             },
             beginAtZero: true,
           },

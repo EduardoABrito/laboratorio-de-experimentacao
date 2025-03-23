@@ -16,11 +16,9 @@ export class Requisito3 {
   private repositories: RepositoryEntity[];
 
   private calculateActivityScore(repository: RepositoryEntity, maximos : responseMaxDTO): number {
-      const { activityScore, metricsCk } = repository;
+      const {metricsCk } = repository;
       const { cbo, dit, lcom } = metricsCk;
   
-      
-      const W_maturity = 0.4;
       const W_cbo = 0.2;
       const W_dit = 0.2;
       const W_lcom = 0.2;
@@ -30,7 +28,6 @@ export class Requisito3 {
       const normalizedLcom = lcom !== null ? 1 - lcom / maximos.maxLcom : 1;
   
       return (
-        W_maturity * activityScore +
         W_cbo * normalizedCbo +
         W_dit * normalizedDit +
         W_lcom * normalizedLcom
@@ -71,10 +68,10 @@ export class Requisito3 {
       data: {
         datasets: [
           {
-            label: 'Pontuação de Atividade',
+            label: 'Atividade vs Qualidade',
             data: this.results.map((r) => ({
-              x: r.compositeScore,
-              y: "",
+              x: r.allReleasesCount,
+              y: r.compositeScore,
             })),
           },
         ],

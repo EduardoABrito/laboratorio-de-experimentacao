@@ -47,7 +47,7 @@ const requisito4Init = async (repositories: RepositoryEntity[]) => {
 
 const init = async () => {
   const gitService = new GitService();
-  const repositories = await gitService.getRepositories(10);
+  const repositories = await gitService.getRepositories(1000);
 
   await requisito1Init(repositories);
   await requisito2Init(repositories);

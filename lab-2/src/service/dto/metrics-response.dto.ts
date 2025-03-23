@@ -57,4 +57,5 @@ export class MetricsCkResponseDto {
   cbo: number | null;
   dit: number | null;
   lcom: number | null;
+  loc: number | null;
 }

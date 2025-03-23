@@ -38,6 +38,7 @@ export class MetricsService {
         cbo: null,
         dit: null,
         lcom: null,
+        loc: null,
       };
     }
   }

@@ -17,10 +17,9 @@ export class Requisito2 {
   }
 
   private calculateMaturityScore(repository: RepositoryEntity, maximos : responseMaxDTO): number {
-    const { maturity, metricsCk } = repository;
+    const { metricsCk } = repository;
     const { cbo, dit, lcom } = metricsCk;
 
-    const W_maturity = 0.4;
     const W_cbo = 0.2;
     const W_dit = 0.2;
     const W_lcom = 0.2;
@@ -30,7 +29,6 @@ export class Requisito2 {
     const normalizedLcom = lcom !== null ? 1 - lcom / maximos.maxLcom : 1;
 
     return (
-      W_maturity * maturity +
       W_cbo * normalizedCbo +
       W_dit * normalizedDit +
       W_lcom * normalizedLcom
@@ -74,8 +72,8 @@ export class Requisito2 {
           {
             label: 'Maturidade vs. Qualidade',
             data: this.results.map((r) => ({
-              x: r.compositeScore,
-              y: calculateAgeYears(r.createdAt),
+              x: calculateAgeYears(r.createdAt),
+              y: r.compositeScore,
             })),
             backgroundColor: 'green',
           },

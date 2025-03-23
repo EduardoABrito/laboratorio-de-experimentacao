@@ -17,10 +17,9 @@ export class Requisito1 {
   }
 
   private calculateScore(repository: RepositoryEntity, maximos : responseMaxDTO): number {
-    const { stargazerCount, metricsCk } = repository;
+    const { metricsCk } = repository;
     const { cbo, dit, lcom } = metricsCk;
 
-    const W_p = 0.5;
     const W_cbo = 0.2;
     const W_dit = 0.2;
     const W_lcom = 0.1;
@@ -30,7 +29,6 @@ export class Requisito1 {
     const normalizedLcom = lcom !== null ? 1 - lcom / maximos.maxLcom : 1;
 
     return (
-      W_p * stargazerCount +
       W_cbo * normalizedCbo +
       W_dit * normalizedDit +
       W_lcom * normalizedLcom
@@ -39,6 +37,7 @@ export class Requisito1 {
 
   async execute(): Promise<Requisito1ResponseDto[]> {
     const maximos =  CalculoMaximas.calcular(this.repositories)
+    console.log(this.repositories)
     const result = this.repositories.map((repo) => {
       const mapped = requisito1Mapper(repo);
       mapped.compositeScore = this.calculateScore(repo, maximos);
