@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import fs from 'fs-extra';
 import path from 'path';
-import simpleGit from 'simple-git';
+import simpleGit, { SimpleGit } from 'simple-git';
 
 import { RepositoryEntity } from '../entities/repository.entity';
 import { progressBarStep } from '../utils/progress-bar.util';
@@ -14,6 +14,11 @@ export class GitService {
   static GIT_AUTH_TOKEN = process.env.GIT_AUTH_TOKEN;
   private static QUANTITY_PERMITED_SEARCH_REPOSITORIES_BY_REQ = 20;
   private static CLONE_DIR = path.join(__dirname, '../../clone_repositories');
+  private simpleGit: SimpleGit;
+
+  constructor() {
+    this.simpleGit = simpleGit();
+  }
 
   private async sendRequest(query: any, variables: any): Promise<any> {
     const { request } = await import('graphql-request');
@@ -42,7 +47,7 @@ export class GitService {
     const query = gql`
       query ($perPage: Int!, $skip: String) {
         search(
-          query: "stars:>10000 language:Java"
+          query: "language:Java sort:stars-desc"
           type: REPOSITORY
           first: $perPage
           after: $skip
@@ -102,7 +107,8 @@ export class GitService {
       const missingAmount = quantity - listRepositories.length;
 
       try {
-        const { repositories, cursor } = await this.findRepositoriesInGithub(cursorAux);
+        const { repositories, cursor } =
+          await this.findRepositoriesInGithub(cursorAux);
 
         if (!repositories || repositories.length === 0) {
           break;
@@ -126,7 +132,6 @@ export class GitService {
     return this.createEntites(listRepositories);
   }
 
-
   private async createEntites(
     listRepositories: RepositoryGitResponseDto[],
   ): Promise<RepositoryEntity[]> {
@@ -145,7 +150,7 @@ export class GitService {
         updatedAt: repository.updatedAt,
         url: repository.url,
         compositeScore: repository.compositeScore,
-        allReleasesCount: repository.releases.totalCount
+        allReleasesCount: repository.releases.totalCount,
       });
 
       progressBarStep(entitiesCountCreate++, listRepositories.length);
@@ -168,7 +173,7 @@ export class GitService {
     }
 
     try {
-      await simpleGit().clone(url, repoPath);
+      await this.simpleGit.clone(url, repoPath);
 
       return repoPath;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
