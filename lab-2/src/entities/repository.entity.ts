@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import { Optional } from 'src/utils/optional';
 
 import { MetricsCkResponseDto } from '../service/dto/metrics-response.dto';
@@ -14,8 +15,7 @@ interface IProps {
   url: string;
   metricsCk: MetricsCkResponseDto;
   compositeScore: number;
-  allReleasesCount: number
-
+  allReleasesCount: number;
 }
 
 export class RepositoryEntity {
@@ -31,7 +31,6 @@ export class RepositoryEntity {
     this.compositeScore = props.compositeScore;
     this.maturity = this.calculateMaturity();
     this.allReleasesCount = props.allReleasesCount;
-
   }
 
   name: string;
@@ -45,7 +44,6 @@ export class RepositoryEntity {
   compositeScore: number;
   maturity: number;
   allReleasesCount: number;
-
 
   private calculateMaturity(): number {
     const currentDate = new Date();
@@ -70,6 +68,8 @@ export class RepositoryEntity {
       pathCloneRepository,
       repository.name,
     );
+
+    await fs.rm(pathCloneRepository, { recursive: true, force: true });
 
     return new RepositoryEntity({
       ...repository,
