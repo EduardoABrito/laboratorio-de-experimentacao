@@ -161,23 +161,31 @@ export class GitService {
   }
 
   async cloneRepository(url: string, name: string): Promise<string> {
-    fs.ensureDirSync(GitService.CLONE_DIR);
+    fs.ensureDirSync(GitService.CLONE_DIR); // Garante que o diretório de clones exista
 
     const repoPath = path.join(GitService.CLONE_DIR, name);
 
+    // Verifica se o repositório já foi clonado
     if (fs.existsSync(repoPath)) {
-      return repoPath;
+      // Verifica se o diretório contém um repositório Git válido
+      const gitDir = path.join(repoPath, '.git');
+      if (fs.existsSync(gitDir)) {
+        console.log(`Repositório já clonado: ${repoPath}`);
+        return repoPath; // Já existe um repositório válido
+      } else {
+        // Se o diretório não contém um repositório válido, exclui e clona novamente
+        fs.rmSync(repoPath, { recursive: true, force: true });
+      }
     }
 
     try {
+      // Tenta clonar o repositório
       await this.simpleGit.clone(url, repoPath);
-
-      return repoPath;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      console.log(`Clonando repositorio: ${repoPath}`);
+      return repoPath; // Retorna o caminho do repositório clonado
     } catch (e) {
-      // console.error(`Error cloning repository: ${e.message}`);
-
-      return null;
+      console.error(`Erro ao clonar o repositório: ${e.message}`);
+      return null; // Retorna null em caso de erro
     }
   }
 }

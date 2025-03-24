@@ -69,7 +69,9 @@ export class Requisito3 {
         datasets: [
           {
             label: 'Atividade vs Qualidade',
-            data: this.results.map((r) => ({
+            data: this.results
+            .filter(r => r.allReleasesCount != null && r.compositeScore != null) // Filtra dados inválidos
+            .map(r => ({
               x: r.allReleasesCount,
               y: r.compositeScore,
             })),

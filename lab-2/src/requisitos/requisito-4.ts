@@ -71,7 +71,9 @@ export class Requisito4 {
         datasets: [
           {
             label: 'Loc vs Qualidade',
-            data: this.results.map((r) => ({
+            data: this.results
+            .filter(r => r.loc != null && r.compositeScore != null) // Filtra dados inválidos
+            .map(r => ({
               x: r.loc,
               y: r.compositeScore,
             })),

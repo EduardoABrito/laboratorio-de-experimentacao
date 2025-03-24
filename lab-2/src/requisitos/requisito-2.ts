@@ -71,10 +71,12 @@ export class Requisito2 {
         datasets: [
           {
             label: 'Maturidade vs. Qualidade',
-            data: this.results.map((r) => ({
-              x: calculateAgeYears(r.createdAt),
-              y: r.compositeScore,
-            })),
+            data: this.results
+                        .filter(r => r.createdAt != null && r.compositeScore != null) // Filtra dados inválidos
+                        .map(r => ({
+                          x: calculateAgeYears(r.createdAt),
+                          y: r.compositeScore,
+                        })),
             backgroundColor: 'green',
           },
         ],

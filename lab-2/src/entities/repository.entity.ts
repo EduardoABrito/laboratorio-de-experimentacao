@@ -63,14 +63,12 @@ export class RepositoryEntity {
       repository.url,
       repository.name,
     );
-
     const metricsResult = await metricsService.CK(
       pathCloneRepository,
       repository.name,
     );
 
-    fs.rm(pathCloneRepository, { recursive: true, force: true });
-
+    fs.rm(pathCloneRepository, { recursive: true, force: true }).catch(e => {});
     return new RepositoryEntity({
       ...repository,
       metricsCk: metricsResult,

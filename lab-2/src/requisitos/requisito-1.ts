@@ -66,7 +66,9 @@ export class Requisito1 {
         datasets: [
           {
             label: 'Popularidade vs. Qualidade',
-            data: this.results.map((r) => ({
+            data: this.results
+            .filter(r => r.popularity != null && r.compositeScore != null) // Filtra dados inválidos
+            .map(r => ({
               x: r.popularity,
               y: r.compositeScore,
             })),
@@ -85,12 +87,14 @@ export class Requisito1 {
               display: true,
               text: 'Popularidade (Stargazers)',
             },
+            beginAtZero: false, // Ajuste dependendo do seu intervalo de dados
           },
           y: {
             title: {
               display: true,
               text: 'Pontuação Composta de Qualidade',
             },
+            beginAtZero: false, // Ajuste dependendo do seu intervalo de dados
           },
         },
       },
