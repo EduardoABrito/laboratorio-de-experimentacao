@@ -69,7 +69,7 @@ export class RepositoryEntity {
       repository.name,
     );
 
-    await fs.rm(pathCloneRepository, { recursive: true, force: true });
+    fs.rm(pathCloneRepository, { recursive: true, force: true });
 
     return new RepositoryEntity({
       ...repository,
