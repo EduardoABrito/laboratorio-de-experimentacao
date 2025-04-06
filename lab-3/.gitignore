@@ -1,0 +1,37 @@
+# Arquivos de ambiente virtual
+venv/
+.env
+*.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Arquivos gerados pelo Jupyter Notebook
+.ipynb_checkpoints/
+
+# Cache e compilação Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Arquivos temporários e logs
+*.log
+*.csv
+*.json
+*.sqlite3
+*.db
+.DS_Store
+*.bak
+*.swp
+
+# Resultados e relatórios gerados
+reports/
+data/raw/
+data/processed/
+
+# Arquivos do VSCode/PyCharm
+.vscode/
+.idea/
+*.iml
+
+# Dependências instaladas
+requirements.txt
