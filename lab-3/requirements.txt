@@ -1,0 +1,12 @@
+pandas
+numpy
+matplotlib
+seaborn
+scipy
+statsmodels
+requests
+pydriller
+plotly
+tqdm
+gql
+graphene

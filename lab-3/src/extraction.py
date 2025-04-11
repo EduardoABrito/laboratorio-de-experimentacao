@@ -10,9 +10,9 @@ GITHUB_TOKEN = os.getenv("GIT_AUTH_TOKEN")
 GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
 MAX_GRAPHQL_POINTS_PER_MINUTE = 1900
 MAX_CONCURRENT_REQUESTS = 5
-DELAY_BETWEEN_REQUESTS = 1  # segundos entre requisições
-TARGET_VALID_REPOS = 100
-PR_FETCH_LIMIT = 20  # quantidade de PRs por repositório
+DELAY_BETWEEN_REQUESTS = 1  
+TARGET_VALID_REPOS = 200
+PR_FETCH_LIMIT = 50 
 
 def get_info(query, variables={}, retries=3):
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}

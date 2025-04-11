@@ -24,7 +24,7 @@ __pycache__/
 *.swp
 
 # Resultados e relatórios gerados
-reports/
+# reports/*
 data/raw/
 data/processed/
 
@@ -32,6 +32,3 @@ data/processed/
 .vscode/
 .idea/
 *.iml
-
-# Dependências instaladas
-requirements.txt
