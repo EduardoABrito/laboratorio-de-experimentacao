@@ -17,6 +17,7 @@ def calcular_tempo_analise(pr):
 def generate_pdf_table(valid_prs_list:list):
     try:
         nome_pdf = "relatorio-pullrequests"
+        os.makedirs("reports", exist_ok=True)
         output_path = os.path.join("reports", f"{nome_pdf}.pdf")
         doc = SimpleDocTemplate(output_path, pagesize=A4)
         elements = []

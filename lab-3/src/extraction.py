@@ -14,22 +14,40 @@ DELAY_BETWEEN_REQUESTS = 1
 TARGET_VALID_REPOS = 200
 PR_FETCH_LIMIT = 50 
 
-def get_info(query, variables={}, retries=3):
+def get_info(query, variables={}, retries=3, backoff_base=10):
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
-    for attempt in range(retries):
-        response = requests.post(
-            GITHUB_GRAPHQL_URL,
-            json={"query": query, "variables": variables},
-            headers=headers
-        )
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 403 and "secondary rate limit" in response.text.lower():
-            wait_time = 60 * (attempt + 1)
-            print(f"⏳ Rate limit atingido. Aguardando {wait_time} segundos antes do retry...")
-            time.sleep(wait_time)
-        else:
-            raise Exception(f"Query falhou! Código {response.status_code}: {response.text}")
+    
+    for attempt in range(1, retries + 1):
+        try:
+            response = requests.post(
+                GITHUB_GRAPHQL_URL,
+                json={"query": query, "variables": variables},
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            
+            elif response.status_code == 403 and "secondary rate limit" in response.text.lower():
+                wait_time = 60 * attempt
+                print(f"⏳ Rate limit atingido. Esperando {wait_time}s (tentativa {attempt}/{retries})...")
+                time.sleep(wait_time)
+            elif response.status_code == 502:
+                print(f"⏳ TimeOut : O tempo de processamento excedeu limete permitido! ")
+            else:
+                print(f"❌ Erro inesperado ({response.status_code}) na tentativa {attempt}: {response.text}")
+                break
+        
+        except requests.exceptions.Timeout:
+            print(f"⏱️ Timeout na tentativa {attempt}. Esperando antes de tentar novamente...")
+            time.sleep(backoff_base * attempt)
+        
+        except requests.exceptions.RequestException as e:
+            print(f"🚫 Erro de rede na tentativa {attempt}: {e}")
+            time.sleep(backoff_base * attempt)
+
+    print("❌ Falha após múltiplas tentativas.")
     return None
 
 QUERY_REPOSITORIES = """
@@ -86,12 +104,28 @@ query($owner: String!, $name: String!, $limit: Int!) {
   }
 }
 """
+QUERY_PR_COUNT = """
+query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    pullRequests(states: [MERGED, CLOSED]) {
+      totalCount
+    }
+  }
+}
+"""
 
-def get_top_repositories(batch_size=50):
+def has_minimum_prs(owner, name, min_count=100):
+    data = get_info(QUERY_PR_COUNT, {"owner": owner, "name": name})
+    try:
+        return data["data"]["repository"]["pullRequests"]["totalCount"] >= min_count
+    except Exception as e:
+        print(f"⚠️ Erro ao verificar PRs em {owner}/{name}: {e}")
+        return False
+
+def get_top_repositories():
     cursor = None
     while True:
-        variables = {"cursor": cursor}
-        data = get_info(QUERY_REPOSITORIES, variables)
+        data = get_info(QUERY_REPOSITORIES, {"cursor": cursor})
         if not data:
             break
 
@@ -117,44 +151,60 @@ def fetch_valid_prs(repo_node, pr_limit):
     owner = repo_node["node"]["owner"]["login"]
     name = repo_node["node"]["name"]
     variables = {"owner": owner, "name": name, "limit": pr_limit}
+    
+    if not has_minimum_prs(owner, name):
+        print(f"🔽 {owner}/{name} ignorado — menos de 100 PRs.")
+        return None
+
     try:
-        data = get_info(QUERY_PULL_REQUESTS_TEMPLATE, variables)
-        if data and "data" in data and data["data"]["repository"]:
-            all_prs = data["data"]["repository"]["pullRequests"]["edges"]
-            valid_prs = [pr["node"] for pr in all_prs if review_time_valid(pr["node"])]
-            if valid_prs:
-                print(f"✅ {len(valid_prs)} PRs válidos de {owner}/{name}")
-                return {
-                    "repository": f"{owner}/{name}",
-                    "valid_prs": valid_prs
-                }
-            else:
-                print(f"⚠️ Nenhum PR válido em {owner}/{name}")
+        data = get_info(QUERY_PULL_REQUESTS_TEMPLATE, {"owner": owner, "name": name, "limit": pr_limit})
+        if not data:
+            return None
+
+        all_prs = data["data"]["repository"]["pullRequests"]["edges"]
+        valid_prs = [pr["node"] for pr in all_prs if review_time_valid(pr["node"])]
+
+        if valid_prs:
+            print(f"✅ {len(valid_prs)} PRs válidos de {owner}/{name}")
+            return {"repository": f"{owner}/{name}", "valid_prs": valid_prs}
         else:
-            print(f"⚠️ Nenhum dado retornado para {owner}/{name}: {data}")
+            print(f"⚠️ Nenhum PR válido em {owner}/{name}")
     except Exception as e:
         print(f"❌ Erro ao buscar PRs de {owner}/{name}: {e}")
     return None
 
+
 def collect_valid_prs_from_repositories():
     valid_results = []
+    repo_generator = get_top_repositories()
+    futures = []
+
+    print("🚀 Iniciando coleta de PRs válidos...")
+
     with ThreadPoolExecutor(max_workers=MAX_CONCURRENT_REQUESTS) as executor:
-        repo_generator = get_top_repositories()
-        futures = []
-        for repo in repo_generator:
-            if len(valid_results) >= TARGET_VALID_REPOS:
-                break
-            future = executor.submit(fetch_valid_prs, repo, PR_FETCH_LIMIT)
-            futures.append(future)
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        try:
+            for repo in repo_generator:
+                if len(valid_results) >= TARGET_VALID_REPOS:
+                    break
 
-            for future in as_completed(futures):
-                result = future.result()
-                if result:
-                    valid_results.append(result)
-                    if len(valid_results) >= TARGET_VALID_REPOS:
-                        break
-                futures.remove(future)
+                future = executor.submit(fetch_valid_prs, repo, PR_FETCH_LIMIT)
+                futures.append(future)
 
-    print(f"🎯 Total de repositórios com PRs válidos: {len(valid_results)}")
+                time.sleep(DELAY_BETWEEN_REQUESTS)
+
+                done_futures = [f for f in futures if f.done()]
+                for future in done_futures:
+                    result = future.result()
+                    futures.remove(future)
+
+                    if result:
+                        valid_results.append(result)
+                        if len(valid_results) >= TARGET_VALID_REPOS:
+                            break
+
+        except Exception as e:
+            print(f"❌ Erro inesperado durante coleta: {e}")
+
+    print(f"🎯 Coleta finalizada: {len(valid_results)} repositórios com PRs válidos.")
     return valid_results
+
