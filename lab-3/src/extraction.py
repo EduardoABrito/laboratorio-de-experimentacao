@@ -12,7 +12,7 @@ MAX_GRAPHQL_POINTS_PER_MINUTE = 1900
 MAX_CONCURRENT_REQUESTS = 5
 DELAY_BETWEEN_REQUESTS = 1  
 TARGET_VALID_REPOS = 200
-PR_FETCH_LIMIT = 50 
+PR_FETCH_LIMIT = 80 
 
 def get_info(query, variables={}, retries=3, backoff_base=10):
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
@@ -34,7 +34,7 @@ def get_info(query, variables={}, retries=3, backoff_base=10):
                 print(f"⏳ Rate limit atingido. Esperando {wait_time}s (tentativa {attempt}/{retries})...")
                 time.sleep(wait_time)
             elif response.status_code == 502:
-                print(f"⏳ TimeOut : O tempo de processamento excedeu limete permitido! ")
+                print(f"⏳ TimeOut : O tempo de processamento excedeu limite permitido! ")
             else:
                 print(f"❌ Erro inesperado ({response.status_code}) na tentativa {attempt}: {response.text}")
                 break
@@ -194,9 +194,18 @@ def collect_valid_prs_from_repositories():
 
                 done_futures = [f for f in futures if f.done()]
                 for future in done_futures:
-                    result = future.result()
                     futures.remove(future)
 
+                    result = future.result()
+                    if result:
+                        valid_results.append(result)
+
+                        if len(valid_results) >= TARGET_VALID_REPOS:
+                            break
+
+            if len(valid_results) < TARGET_VALID_REPOS:
+                for future in as_completed(futures):
+                    result = future.result()
                     if result:
                         valid_results.append(result)
                         if len(valid_results) >= TARGET_VALID_REPOS:
@@ -207,4 +216,5 @@ def collect_valid_prs_from_repositories():
 
     print(f"🎯 Coleta finalizada: {len(valid_results)} repositórios com PRs válidos.")
     return valid_results
+
 
